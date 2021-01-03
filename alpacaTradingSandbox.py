@@ -6,8 +6,8 @@ import tensorflow as tf
 
 
 #authentication variable setup
-api_key = 'PK2S1D9S8IVN8HC6W2NO'
-api_secret = 'CjqGC3xceCyAxE503h5k25l5xssbj9U1STBPDo/f'
+api_key = 'insert_key'
+api_secret = 'insert_secret_key'
 base_url = 'https://paper-api.alpaca.markets'
 
 #open REST API
