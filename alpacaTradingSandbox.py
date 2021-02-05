@@ -1,7 +1,15 @@
+import multiprocessing as mp
+mp.set_start_method('spawn', force=True)
+
+
 import alpaca_trade_api as tradeapi
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras import datasets, layers, models
+print('Importing tensorflow...' + tf.__version__)
+
+from tensorflow import keras
 
 
 
@@ -21,6 +29,18 @@ if(account == None):
 else:
     print("Alpaca opened\n")
 
+#define the variables for training here - not sure about batch size
+learning_rate = 0.01
+epochs = 30
+batch_size = 2
+
+
+#features and labels - at the moment we are only using one column
+feature = 'Relative Strength Index'
+label = "buy_or_sell"
+
+#canslim_model = None
+'''
 
 #buyShare function - takes ticker as input
 def buyShare(ticker):
@@ -43,7 +63,7 @@ def sellShare(ticker):
         time_in_force = 'gtc'
         )
     print(ticker + " share sold\n")
-
+'''
 
 canslim = pd.read_csv(filepath_or_buffer = "canslimAnalysis.csv")
 
@@ -52,66 +72,32 @@ if (canslim.empty):
 else:
     print("canslimAnalysis.csv has been opened successfully\n")
 
-def build_canslim(learning_rate):
-    #linear regression model
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Dense(units=1, input_shape=(1,)))
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=learning_rate),
-                  loss="mean_squared_error",
-                  metrics=[tf.keras.metrics.RootMeanSquaredError()])
-    print("Canslim model is built")
-    print('\n')
-    
-    return model
 
+model = keras.Sequential(
+    [
+        layers.Dense(2, activation = "relu", name="layer1"),
+    ]
+)
 
-def train_canslim(model, df, feature, label, epochs, batch_size):
-    history = model.fit(x=df[feature],
-                        y=df[label],
-                        batch_size=batch_size,
-                        epochs=epochs)
-    trained_weight = model.get_weights()[0]
-    trained_bias = model.getweights()[1]
+print("Model built")
 
-    epochs = history.epoch
+#mean square error and stochastic gradient descent
+model.compile(optimizer='sgd', loss='mean_squared_error')
 
-    hist = pd.DataFrame(history.history)
+'''
+MODIFY CODE HERE - needs to read data in from canslim
+pandas?
+'''
+xs = np.array([76.62, 36.62, 53.07, 55.65, 67.5, 40.94, 49.69, 52.75, 58.39], dtype=float) #feature column
+ys = np.array([1, 0, 1, 1, 1, 0, 1, 1, 1], dtype=float) #label columm
+print("data loaded")
 
-    rmse = hist["root_mean_squared_error"]
+#train
+model.fit(xs, ys, epochs=50)
 
-    print("Canslim model is trained")
-    print('\n')
+#testing
+print("This should be zero: ")
+print(model.predict([44.44]))
+print("This should be zero: ")
+print(model.predict([51.71]))
 
-    return trained_weight, trained_bias, epochs, rmse
-
-
-#define the variables for training here - not sure about batch size
-learning_rate = 0.01
-epochs = 30
-batch_size = 30
-
-
-#features and labels - at the moment we are only using one column
-feature = "Relative Strength Index"
-label = "buy_or_sell"
-
-canslim_model = None
-
-
-#build and train it here
-canslim_model = build_canslim(learning_rate)
-
-weight, bias, epochs, rmse = train_canslim(canslim_model, canslim,
-                                           feature, label, epochs,
-                                           batch_size)
-
-"""
-print("\nThe learned weight of Relative Strength Index model is %.4f" % weight)
-print("The learned bias of Relative Strength Index model is %.4f\n" % bias )
-
-"""
-
-
-
-#use canslim analysis.csv file and a correlation matrix with
-#a machine learning algorithm to analyze and trade on the stock market
